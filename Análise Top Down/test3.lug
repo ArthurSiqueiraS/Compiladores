@@ -1,0 +1,17 @@
+main {
+
+}
+
+function bool swap_vars(a, b) {
+    temp := a;
+    a := b;
+    b := temp;
+
+    print(temp);
+    
+    if((a > b)) {
+        return a;
+    };
+
+    return b;
+}

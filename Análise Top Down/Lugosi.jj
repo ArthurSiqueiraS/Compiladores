@@ -1,0 +1,150 @@
+PARSER_BEGIN(Lugosi)
+import java.io.*;
+public class Lugosi {
+
+  public static void main(String args[]) throws ParseException,IOException {
+    
+    Lugosi parser = new Lugosi(new FileInputStream(args[0]));
+    parser.Lugosi();
+  }
+
+}
+
+PARSER_END(Lugosi)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  <MAIN: "main"> | <VAR: "var">
+| <ATRIB: ":="> | <IF: "if"> | <WHILE: "while"> | <DO: "do">
+| <RETURN: "return"> | <PRINT: "print"> | <FUNCTION: "function">
+| <ACHAVES: "{"> | <FCHAVES: "}"> | <APARNTS: "("> | <FPARNTS: ")"> 
+| <VIRG: ","> | <PTVIRG: ";">
+}
+
+TOKEN :
+{
+  <NUM : (["0"-"9"])+("."(["0"-"9"])+)?("E"("+"|"-")?(["0"-"9"])+)?>
+| <BOOL: "true" | "false"> 
+| <TIPO: "int" | "bool"> 
+| <OP: "+" | "-" | "*" | "/" | "&&" | "||" | "<" | ">" | "==">
+| <ID: ["a"-"z","A"-"Z"](("_")?["a"-"z","A"-"Z","0"-"9"])*>
+}
+
+
+
+void Lugosi () :
+{}
+{ 
+
+  Main() 
+  (Func())?
+  <EOF> 
+}
+	
+
+void Main ():
+{}
+{
+ <MAIN> <ACHAVES> 
+ 
+  VarDecl()
+  SeqComandos()
+
+ <FCHAVES>
+
+}
+
+void VarDecl() :
+{}
+{
+  (<VAR> <TIPO> <ID> <PTVIRG>)*
+}
+
+void SeqComandos() :
+{}
+{
+  (ComanCondBlock())*
+}
+
+void ComanCondBlock() :
+{}
+{
+  <ID> Comando_()
+| <IF> ExpPar() CondBlock() <PTVIRG>
+| <WHILE> ExpPar() <DO> CondBlock() <PTVIRG>
+| <DO> CondBlock() <WHILE> ExpPar() <PTVIRG>
+| <RETURN> Exp() <PTVIRG>
+| <PRINT> ExpPar() <PTVIRG>
+}
+
+void CondBlock() :
+{}
+{
+  <ACHAVES> SeqComandos() <FCHAVES> 
+}
+
+void ExpPar() :
+{}
+{
+  <APARNTS> Exp() <FPARNTS>
+}
+
+void Comando_() :
+{}
+{
+  <ATRIB> Exp() <PTVIRG>
+| <APARNTS> (ListaExp())? <FPARNTS> <PTVIRG>  
+}
+
+void Exp() :
+{}
+{
+  <APARNTS> Exp() <OP> Exp() <FPARNTS>
+| Fator() 
+}
+
+void Fator() :
+{}
+{
+  <ID> (<APARNTS> (ListaExp())? <FPARNTS>)?
+| <NUM>
+| <BOOL>
+}
+
+void ListaExp() :
+{}
+{
+  Exp() ListaExp_()
+}
+
+void ListaExp_() :
+{}
+{
+  (<VIRG> Exp())*
+}
+
+void Func() :
+{}
+{
+  (<FUNCTION> <TIPO> <ID> <APARNTS> (ListaArg())? <FPARNTS> <ACHAVES> VarDecl() SeqComandos() <FCHAVES>)+ 
+}
+
+void ListaArg() :
+{}
+{
+  <ID> ListaArg_()
+}
+
+void ListaArg_() :
+{}
+{
+  (<VIRG> <ID> ListaArg_())*
+}

@@ -1,0 +1,18 @@
+main {
+    var bool my_var;
+
+    my_var := ((true && false) + 3);
+    do { 
+        print(2.23);
+        return true;
+    } while((false || true));
+
+    temp();
+}
+
+function int foo (b, a, r) {
+    var int foobar;
+    return 1.35E-2;
+}
+
+function bool temp() {}
