@@ -140,11 +140,11 @@ void Func() :
 void ListaArg() :
 {}
 {
-  <ID> ListaArg_()
+  <TIPO> <ID> (ListaArg_())*
 }
 
 void ListaArg_() :
 {}
 {
-  (<VIRG> <ID> ListaArg_())*
+  <VIRG> ListaArg()
 }

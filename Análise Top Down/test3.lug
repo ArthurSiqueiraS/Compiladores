@@ -2,7 +2,7 @@ main {
 
 }
 
-function bool swap_vars(a, b) {
+function bool swap_vars(int a, int b) {
     temp := a;
     a := b;
     b := temp;

@@ -10,7 +10,7 @@ main {
     temp();
 }
 
-function int foo (b, a, r) {
+function int foo (int b, int a, int r) {
     var int foobar;
     return 1.35E-2;
 }

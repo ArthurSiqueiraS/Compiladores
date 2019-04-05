@@ -240,7 +240,7 @@ public class Lugosi implements LugosiConstants {
       jj_consume_token(ID);
       jj_consume_token(APARNTS);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case ID:
+      case TIPO:
         ListaArg();
         break;
       default:
@@ -264,11 +264,8 @@ public class Lugosi implements LugosiConstants {
   }
 
   static final public void ListaArg() throws ParseException {
+    jj_consume_token(TIPO);
     jj_consume_token(ID);
-    ListaArg_();
-  }
-
-  static final public void ListaArg_() throws ParseException {
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -279,10 +276,13 @@ public class Lugosi implements LugosiConstants {
         jj_la1[13] = jj_gen;
         break label_5;
       }
-      jj_consume_token(VIRG);
-      jj_consume_token(ID);
       ListaArg_();
     }
+  }
+
+  static final public void ListaArg_() throws ParseException {
+    jj_consume_token(VIRG);
+    ListaArg();
   }
 
   static private boolean jj_initialized_once = false;
@@ -301,7 +301,7 @@ public class Lugosi implements LugosiConstants {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x2000,0x40,0x1001f00,0x1001f00,0x1310000,0x10080,0x1310000,0x1310000,0x10000,0x1300000,0x40000,0x1000000,0x2000,0x40000,};
+      jj_la1_0 = new int[] {0x2000,0x40,0x1001f00,0x1001f00,0x1310000,0x10080,0x1310000,0x1310000,0x10000,0x1300000,0x40000,0x400000,0x2000,0x40000,};
    }
 
   /** Constructor with InputStream. */
