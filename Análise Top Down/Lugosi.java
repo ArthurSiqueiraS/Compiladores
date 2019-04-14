@@ -266,17 +266,13 @@ public class Lugosi implements LugosiConstants {
   static final public void ListaArg() throws ParseException {
     jj_consume_token(TIPO);
     jj_consume_token(ID);
-    label_5:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case VIRG:
-        ;
-        break;
-      default:
-        jj_la1[13] = jj_gen;
-        break label_5;
-      }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case VIRG:
       ListaArg_();
+      break;
+    default:
+      jj_la1[13] = jj_gen;
+      ;
     }
   }
 
