@@ -24,4 +24,4 @@ class StackMachine
     end
 end
 
-puts StackMachine.new.interpret(ARGV[0])
+puts StackMachine.new.run(ARGV[0])
