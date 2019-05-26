@@ -1,22 +1,26 @@
 class CodeGen{
 
 	
-	float geraCodigo (ArvoreSintatica arv)
+	String geraCodigo (ArvoreSintatica arv)
 	{
-		if (arv instanceof Operador) {
-			float arg1 = (geraCodigo(((Operador) arv).arg1));
-			float arg2 = (geraCodigo(((Operador) arv).arg2));	
+		return (geraCodigo2(arv) + "PRINT");
+	}
+	String geraCodigo2 (ArvoreSintatica arv)
+	{
 
-			if (arv instanceof Soma) return arg1 + arg2;
-			if (arv instanceof Sub) return arg1 - arg2;
-			if (arv instanceof Mult) return arg1 * arg2;
-			if (arv instanceof Div) return arg1 / arg2;
-		}
+	if (arv instanceof Mult)
+		return (geraCodigo2(((Mult) arv).arg1) + 
+			geraCodigo2(((Mult) arv).arg2) +
+			"MULT\n");
 
-		if (arv instanceof Num) {
-			return ((Num) arv).getNum();
-		}
+	if (arv instanceof Soma)
+		return (geraCodigo2(((Soma) arv).arg1) + 
+			geraCodigo2(((Soma) arv).arg2) +
+			"SUM\n");
 
-		return 0;
+	if (arv instanceof Num)
+		return ("PUSH "  + ((Num) arv).num + "\n");
+
+	return "";
 	}
 }

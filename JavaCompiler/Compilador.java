@@ -13,7 +13,7 @@ class Compilador{
 		
 			
 			CodeGen backend = new CodeGen();
-			float codigo = backend.geraCodigo(arv);
+			String codigo = backend.geraCodigo(arv);
 			System.out.println(codigo);
 
 		}catch(Exception e)
