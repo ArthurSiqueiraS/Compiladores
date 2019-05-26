@@ -5,99 +5,184 @@ import java.util.ArrayList;
 class ArvoreLugosi {
   Main main;
   ArrayList<Func> funcs;  
+
+  public ArvoreLugosi(Main main, ArrayList<Func> funcs) { 
+    this.main = main; 
+    this.funcs = funcs;
+  }
 }
 
 class Main {
   ArrayList<VarDecl> varDecls;
   ArrayList<Comando> comandos;
+
+  public Main(ArrayList<VarDecl> varDecls, ArrayList<Comando> comandos) { 
+    this.varDecls = varDecls; 
+    this.comandos = comandos; 
+  }
 }
 
 class VarDecl {
   Tipo tipo;
   String var;
+
+  public VarDecl(Tipo tipo, String var) {
+    this.tipo = tipo;
+    this.var = var;
+  }
 }
 
-class Tipo {}
+abstract class Tipo {}
 
 class Int extends Tipo {}
 
 class Bool extends Tipo {}
 
-class Comando {}
+abstract class Comando {}
 
 class Atribuicao extends Comando {
   String var;
   Exp exp;
+
+  public Atribuicao(String var, Exp exp) {
+    this.var = var;
+    this.exp = exp;
+  }
 }
 
 class ChamadaFuncao extends Comando {
   String nomeFuncao;
   ArrayList<Exp> argumentos;
+
+  public ChamadaFuncao(String nomeFuncao, ArrayList<Exp> argumentos) {
+    this.nomeFuncao = nomeFuncao;
+    this.argumentos = argumentos;
+  }
 }
 
 class If extends Comando {
   Exp cond;
   ArrayList<Comando> then;
+
+  public If(Exp cond, ArrayList<Comando> then) {
+    this.cond = cond;
+    this.then = then;
+  }
 }
 
 class While extends Comando {
   Exp cond;
   ArrayList<Comando> then;
+
+  public While(Exp cond, ArrayList<Comando> then) {
+    this.cond = cond;
+    this.then = then;
+  }
 }
 
 class DoWhile extends Comando {
   Exp cond;
   ArrayList<Comando> then;
+
+  public DoWhile(Exp cond, ArrayList<Comando> then) {
+    this.cond = cond;
+    this.then = then;
+  }
 }
 
 class Return extends Comando {
   Exp exp;
+
+  public Return(Exp exp) {
+    this.exp = exp;
+  }
 }
 
 class Print extends Comando {
   Exp exp;
+
+  public Print(Exp exp) {
+    this.exp = exp;
+  }
 }
 
 class Func {
   Tipo tipo;
   String nome;
-  ArrayList<Exp> argumentos;
+  ArrayList<Arg> argumentos;
+  ArrayList<VarDecl> varDecls;
   ArrayList<Comando> comandos;
+
+  public Func(Tipo tipo, String nome, ArrayList<Arg> argumentos, ArrayList<VarDecl> varDecls, ArrayList<Comando> comandos) {
+    this.tipo = tipo;
+    this.nome = nome;
+    this.argumentos = argumentos;
+    this.varDecls = varDecls;
+    this.comandos = comandos;
+  }
 }
 
-class Exp {}
+abstract class Exp {}
 
 class OperadorInfixo extends Exp {
-  Exp arg1;
-  Exp arg2;
+  Exp arg1, arg2;
   String op;
+
+  public OperadorInfixo(Exp arg1, Exp arg2, String op) {
+    this.arg1 = arg1;
+    this.arg2 = arg2;
+    this.op = op;
+  }
 }
 
-class Fator extends Exp {}
+abstract class Fator extends Exp {}
 
 class TokenId extends Fator {
   String token;
+
+  public TokenId(String token) {
+    this.token = token;
+  }
 }
 
 class FuncFator extends Fator {
   String func;
   ArrayList<Exp> argumentos;
+
+  public FuncFator(String func, ArrayList<Exp> argumentos) {
+    this.func = func;
+    this.argumentos = argumentos;
+  }
 }
 
 class TokenNum extends Fator {
   String num;
+
+  public TokenNum(String num) {
+    this.num = num;
+  }
 }
 
 class True extends Fator {}
 
 class False extends Fator {}
 
+class Arg {
+  Tipo tipo;
+  TokenId tokenId;
+
+  public Arg(Tipo tipo, TokenId tokenId) {
+    this.tipo = tipo;
+    this.tokenId = tokenId;
+  }
+}
+
 public class Lugosi {
 
   public static void main(String args[]) throws ParseException,IOException {
     
     Lugosi parser = new Lugosi(new FileInputStream(args[0]));
-    parser.Lugosi();
+    ArvoreLugosi arvore = parser.Lugosi();
   }
 
 }
@@ -130,113 +215,323 @@ TOKEN :
 | <ID: ["a"-"z","A"-"Z"](("_")?["a"-"z","A"-"Z","0"-"9"])*>
 }
 
-
-
-void Lugosi () :
-{}
+ArvoreLugosi Lugosi () :
+{
+  Main main;
+  ArrayList<Func> funcs = new ArrayList<Func>();
+}
 { 
+  main = Main()
+  (
+    Func(funcs)
+  )?
+  <EOF>
 
-  Main() 
-  (Func())?
-  <EOF> 
-}
-	
+  { return new ArvoreLugosi(main, funcs); }
+}	
 
-void Main ():
-{}
+Main Main ():
 {
- <MAIN> <ACHAVES> 
- 
-  VarDecl()
-  SeqComandos()
-
- <FCHAVES>
-
+  ArrayList<VarDecl> varDecls;
+  ArrayList<Comando> comandos;
 }
-
-void VarDecl() :
-{}
 {
-  (<VAR> <TIPO> <ID> <PTVIRG>)*
-}
-
-void SeqComandos() :
-{}
-{
-  (ComanCondBlock())*
+  <MAIN>
+  <ACHAVES> 
+  varDecls = VarDecl()
+  comandos = SeqComandos()
+  <FCHAVES>
+  
+  { return new Main(null, null); }
 }
 
-void ComanCondBlock() :
-{}
+ArrayList<VarDecl> VarDecl() :
 {
-  <ID> Comando_()
-| <IF> ExpPar() CondBlock() <PTVIRG>
-| <WHILE> ExpPar() <DO> CondBlock() <PTVIRG>
-| <DO> CondBlock() <WHILE> ExpPar() <PTVIRG>
-| <RETURN> Exp() <PTVIRG>
-| <PRINT> ExpPar() <PTVIRG>
+  ArrayList<VarDecl> varDecls = new ArrayList<VarDecl>();
+  Tipo tipo;
+  Token var, tokenTipo;
+  Int tipoInt = new Int();
+  Bool tipoBool = new Bool();
+}
+{
+  (
+    <VAR> 
+    tokenTipo = <TIPO>
+    var = <ID>
+    <PTVIRG> 
+    {
+      tipo = tokenTipo.toString().equals("int") ? tipoInt : tipoBool;
+      varDecls.add(new VarDecl(tipo, var.toString()));
+    }
+  )*
+
+  { return varDecls; }
 }
 
-void CondBlock() :
-{}
+ArrayList<Comando> SeqComandos() :
 {
-  <ACHAVES> SeqComandos() <FCHAVES> 
+  ArrayList<Comando> comandos = new ArrayList<Comando>();
+  Comando comando;
+}
+{
+  (
+    comando = ComanCondBlock()
+    { comandos.add(comando); }
+  )*
+
+  { return comandos; }
 }
 
-void ExpPar() :
-{}
+Comando ComanCondBlock() :
+{ Comando comando; }
 {
-  <APARNTS> Exp() <FPARNTS>
+  {
+    Token nomeFuncao;
+    ArrayList<Exp> argumentos;
+  }
+  (
+    nomeFuncao = <ID> 
+    comando = Comando_(nomeFuncao.toString())
+  )
+
+  { return comando; }
+| 
+  {
+    Exp cond;
+    ArrayList<Comando> then;
+  }
+(
+    (
+      <IF>
+      cond = ExpPar()
+      then = CondBlock()
+      <PTVIRG>
+    )
+
+    { return new If(cond, then); }
+  | 
+    (
+      <WHILE>
+      cond = ExpPar()
+      <DO>
+      then = CondBlock() 
+      <PTVIRG>
+    )
+
+    { return new While(cond, then); }
+  | 
+    (
+      <DO>
+      then = CondBlock()
+      <WHILE>
+      cond = ExpPar() 
+      <PTVIRG>
+    )
+
+    { return new DoWhile(cond, then); }
+)
+|  
+   { Exp exp; }
+(
+    (
+      <RETURN>
+      exp = Exp()
+      <PTVIRG>
+    )
+
+    { return new Return(exp); }
+| 
+    (
+      <PRINT>
+      exp = ExpPar()
+      <PTVIRG>
+    )
+
+    { return new Print(exp); }
+)
 }
 
-void Comando_() :
-{}
+ArrayList<Comando> CondBlock() :
+{ ArrayList<Comando> comandos; }
 {
-  <ATRIB> Exp() <PTVIRG>
-| <APARNTS> (ListaExp())? <FPARNTS> <PTVIRG>  
+  <ACHAVES> 
+  comandos = SeqComandos() 
+  <FCHAVES> 
+
+  { return comandos; }
 }
 
-void Exp() :
-{}
+Exp ExpPar() :
+{ Exp exp; }
 {
-  <APARNTS> Exp() <OP> Exp() <FPARNTS>
-| Fator() 
+  <APARNTS> 
+  exp = Exp() 
+  <FPARNTS>
+
+  { return exp; }
 }
 
-void Fator() :
+Comando Comando_(String id) :
 {}
 {
-  <ID> (<APARNTS> (ListaExp())? <FPARNTS>)?
-| <NUM>
-| <BOOL>
+  { Exp argumento; }
+  (
+    <ATRIB> 
+    argumento = Exp() 
+    <PTVIRG>
+  )
+  { return new Atribuicao(id, argumento); }
+| 
+  { ArrayList<Exp> argumentos = new ArrayList<Exp>(); }
+  (
+    <APARNTS> 
+    (
+      ListaExp(argumentos)
+    )? 
+    <FPARNTS> 
+    <PTVIRG>
+  )  
+  { return new ChamadaFuncao(id, argumentos); }
 }
 
-void ListaExp() :
+Exp Exp() :
 {}
 {
-  Exp() ListaExp_()
+  {
+    Exp arg1, arg2;
+    Token op;
+  }
+  (
+    <APARNTS> 
+    arg1 = Exp() 
+    op = <OP> 
+    arg2 = Exp() 
+    <FPARNTS>
+  )
+
+  { return new OperadorInfixo(arg1, arg2, op.toString()); }
+| 
+  { Exp fator; }
+  fator = Fator() 
+  { return fator; }
 }
 
-void ListaExp_() :
+Fator Fator() :
 {}
 {
-  (<VIRG> Exp())*
+  {
+    Token token;
+    String func = null;
+    ArrayList<Exp> argumentos = new ArrayList<Exp>();
+  }
+  (
+    token = <ID> 
+    (
+      { func = token.toString(); }
+      <APARNTS> 
+      (
+        ListaExp(argumentos)
+      )? 
+      <FPARNTS>
+    )?
+  )
+
+  { return func == null ? new FuncFator(token.toString(), argumentos) : new TokenId(func); }
+| 
+  { Token num; }
+  num = <NUM>
+
+  { return new TokenNum(num.toString()); }
+| 
+  {
+    Fator bool;
+    Token boolToken;
+  }
+  boolToken = <BOOL>
+  
+  { return boolToken.toString().equals("True") ? new True() : new False(); }
 }
 
-void Func() :
-{}
+void ListaExp(ArrayList<Exp> exps) :
+{ Exp exp; }
 {
-  (<FUNCTION> <TIPO> <ID> <APARNTS> (ListaArg())? <FPARNTS> <ACHAVES> VarDecl() SeqComandos() <FCHAVES>)+ 
+  exp = Exp()
+  { exps.add(exp); } 
+  ListaExp_(exps)
 }
 
-void ListaArg() :
-{}
+void ListaExp_(ArrayList<Exp> exps) :
+{ Exp exp; }
 {
-  <TIPO> <ID> (ListaArg_())?
+  (
+    <VIRG> 
+    exp = Exp()
+    { exps.add(exp); }
+  )*
 }
 
-void ListaArg_() :
-{}
+void Func(ArrayList<Func> funcs) :
 {
-  <VIRG> ListaArg()
+  Tipo tipo;
+  Token nome, tokenTipo;
+  ArrayList<Arg> argumentos = new ArrayList<Arg>();
+  ArrayList<VarDecl> varDecls;
+  ArrayList<Comando> comandos;
+  Int tipoInt = new Int();
+  Bool tipoBool = new Bool();
+}
+{
+  (
+    <FUNCTION> 
+    tokenTipo = <TIPO> 
+    nome = <ID> 
+    <APARNTS> 
+    (
+      ListaArg(argumentos)
+    )? 
+    <FPARNTS> 
+    <ACHAVES> 
+    varDecls = VarDecl() 
+    comandos = SeqComandos() 
+    <FCHAVES>
+
+    { 
+      tipo = tokenTipo.toString().equals("int") ? tipoInt : tipoBool;
+      funcs.add(new Func(tipo, nome.toString(), argumentos, varDecls, comandos));
+    }
+  )+ 
+}
+
+void ListaArg(ArrayList<Arg> argumentos) :
+{
+  Tipo tipo;
+  Token token, tokenTipo;
+  Int tipoInt = new Int();
+  Bool tipoBool = new Bool();
+}
+{
+  tokenTipo = <TIPO>
+  token = <ID>
+  {
+    tipo = tokenTipo.equals("int") ? tipoInt : tipoBool;
+    argumentos.add(new Arg(tipo, new TokenId(token.toString())));
+  } 
+  (
+    ListaArg_(argumentos, tipoInt, tipoBool)
+  )+
+}
+
+void ListaArg_(ArrayList<Arg> argumentos, Int tipoInt, Bool tipoBool) :
+{
+  Tipo tipo;
+  Token token, tokenTipo;
+}
+{
+  <VIRG> 
+  tokenTipo = <TIPO>
+  token = <ID>
+  {
+    tipo = tokenTipo.equals("int") ? tipoInt : tipoBool;
+    argumentos.add(new Arg(tipo, new TokenId(token.toString())));
+  }
 }
