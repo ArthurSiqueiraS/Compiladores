@@ -44,10 +44,18 @@ class ArvoreLugosi {
 
   public void pprint() {
     main.pprint();
-    for(Func func: funcs) {
+    for(Func func : funcs) {
       P.println("");
       func.pprint();
     }
+  }
+
+  public void geraRuby() {
+    for(Func func : funcs) {
+      func.geraRuby();
+      P.println("");
+    }
+    main.geraRuby();
   }
 }
 
@@ -63,17 +71,21 @@ class Main {
   public void pprint() {
     P.println("main {");
       P.tab();
-      for(VarDecl varDecl: varDecls) {
-        Boolean first = varDecls.indexOf(varDecl) == 0,
-          last = varDecls.indexOf(varDecl) == varDecls.size() - 1;
-        varDecl.pprint(first, last);
+      for(VarDecl varDecl : varDecls) {
+        varDecl.pprint();
       }
 
-      for(Comando comando: comandos) {
+      for(Comando comando : comandos) {
         comando.pprint();
       }
       P.untab();
     P.println("}");
+  }
+
+  public void geraRuby() {
+    for(Comando comando : comandos) {
+      comando.geraRuby();
+    }
   }
 }
 
@@ -86,16 +98,12 @@ class VarDecl {
     this.var = var;
   }
 
-  public void pprint(Boolean first, Boolean last) {
-    if(first)
-      P.print("var ");
-    else
-      P.print(", ");
+  public void pprint() {
+    P.print("var ");
     tipo.pprint();
     P.print(" " + var);
-    if(last)
-      P.println(";");
-}
+    P.println(";");
+  }
 }
 
 abstract class Tipo {
@@ -116,6 +124,8 @@ class Bool extends Tipo {
 
 abstract class Comando {
   public abstract void pprint();
+
+  public abstract void geraRuby();
 }
 
 class Atribuicao extends Comando {
@@ -131,7 +141,13 @@ class Atribuicao extends Comando {
     P.print(var + " := ");
     exp.pprint();
     P.println(";");
-}
+  }
+
+  public void geraRuby() {
+    P.print(var + " = ");
+    exp.geraRuby();
+    P.println("");
+  }
 }
 
 class ChamadaFuncao extends Comando {
@@ -149,8 +165,22 @@ class ChamadaFuncao extends Comando {
       if(!(argumentos.indexOf(arg) == 0))
         P.print(", ");
       arg.pprint();
-}
+    }
     P.println(");");
+  }
+
+  public void geraRuby() {
+    P.print(nomeFuncao);
+    if(argumentos.size() > 0) {
+      P.print("(");
+      for(Exp arg : argumentos) {
+        if(!(argumentos.indexOf(arg) == 0))
+          P.print(", ");
+        arg.geraRuby();
+      }
+      P.print(")");
+    }
+    P.println("");
   }
 }
 
@@ -164,29 +194,56 @@ class Condicional extends Comando {
   }
 
   public void pprint() {
-    if (this instanceof DoWhile)
+    if(this instanceof DoWhile)
       P.println("do {");
     else {
-      if (this instanceof If)
+      if(this instanceof If)
         P.print("if");
-      if (this instanceof While)
+      if(this instanceof While)
         P.print("while");
       P.print("(");
       cond.pprint();
-      P.println(") {");
-}
+      P.print(") ");
+      if(this instanceof While)
+        P.print("do ");
+      P.println("{");
+    }
       P.tab();
-      for(Comando comando: then) {
+      for(Comando comando : then) {
         comando.pprint();
-}
+      }
       P.untab();
     if(this instanceof DoWhile) {
-      P.print("} while (");
+      P.print("} while(");
       cond.pprint();
       P.println(");");
     }
     else
       P.println("};");
+  }
+
+  public void geraRuby() {
+    if(this instanceof DoWhile)
+      P.println("loop do");
+    else {
+      if(this instanceof If)
+        P.print("if ");
+      if(this instanceof While)
+        P.print("while ");
+      cond.geraRuby();
+      P.println("");
+    }
+      P.tab();
+      for(Comando comando : then) {
+        comando.geraRuby();
+      }
+      if(this instanceof DoWhile) {
+        P.print("break unless ");
+        cond.geraRuby();
+        P.println("");
+      }
+      P.untab();
+    P.println("end");
   }
 }
 
@@ -218,13 +275,22 @@ class Chamada extends Comando {
   public void pprint() {
     if(this instanceof Return)
       P.print("return ");
-    else
-      P.print("print (");
+    if(this instanceof Print)
+      P.print("print(");
     exp.pprint();
     if(this instanceof Print)
       P.print(")");
     P.println(";");
-}
+  }
+
+  public void geraRuby() {
+    if(this instanceof Return)
+      P.print("return ");
+    if(this instanceof Print)
+      P.print("print ");
+    exp.geraRuby();
+    P.println("");
+  }
 }
 
 class Return extends Chamada {
@@ -255,6 +321,7 @@ class Func {
   }
 
   public void pprint() {
+    P.print("function ");
     tipo.pprint();
     P.print(" " + nome + "(");
     for(Arg arg : argumentos) {
@@ -264,7 +331,7 @@ class Func {
       P.tab();
       for(VarDecl varDecl : varDecls) {
         Boolean first = varDecls.indexOf(varDecl) == 0, last = varDecls.indexOf(varDecl) == varDecls.size() - 1;
-        varDecl.pprint(first, last);
+        varDecl.pprint();
       }
       for(Comando comando : comandos) {
         comando.pprint();
@@ -272,10 +339,32 @@ class Func {
       P.untab();
     P.println("}");
   }
+
+  public void geraRuby() {
+    P.print("def " + nome);
+    if(argumentos.size() > 0) {
+      P.print("(");
+      for(Arg arg : argumentos) {
+        arg.geraRuby(argumentos.indexOf(arg) == 0);
+      }
+      P.print(")");
+    }
+      P.println("");
+      P.tab();
+      for(Comando comando : comandos) {
+        comando.geraRuby();
+      }
+      P.untab();
+    P.println("end");
+  }
 }
 
 abstract class Exp {
   public abstract void pprint();
+
+  public void geraRuby() {
+    pprint();
+  }
 }
 
 class OperadorInfixo extends Exp {
@@ -371,6 +460,12 @@ class Arg {
     P.print(" ");
     tokenId.pprint();
   }
+
+  public void geraRuby(Boolean first) {
+    if(!first)
+      P.print(", ");
+    tokenId.pprint();
+  }
 }
 
 public class Lugosi implements LugosiConstants {
@@ -378,8 +473,17 @@ public class Lugosi implements LugosiConstants {
   public static void main(String args[]) throws ParseException,IOException {
 
     Lugosi parser = new Lugosi(new FileInputStream(args[0]));
+    String language = args.length > 1 ? args[1] : "lugosi";
     ArvoreLugosi arvore = parser.Lugosi();
-    arvore.pprint();
+
+    switch(language.toLowerCase()) {
+      case "lugosi":
+        arvore.pprint();
+        break;
+      case "ruby":
+        arvore.geraRuby();
+        break;
+    }
   }
 
   static final public ArvoreLugosi Lugosi() throws ParseException {
@@ -695,7 +799,7 @@ public class Lugosi implements LugosiConstants {
   static final public void Func(ArrayList<Func> funcs) throws ParseException {
   Tipo tipo;
   Token nome, tokenTipo;
-  ArrayList<Arg> argumentos = new ArrayList<Arg>();
+  ArrayList<Arg> argumentos;
   ArrayList<VarDecl> varDecls;
   ArrayList<Comando> comandos;
   Int tipoInt = new Int();
@@ -706,6 +810,7 @@ public class Lugosi implements LugosiConstants {
       tokenTipo = jj_consume_token(TIPO);
       nome = jj_consume_token(ID);
       jj_consume_token(APARNTS);
+      argumentos = new ArrayList<Arg>();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case TIPO:
         ListaArg(argumentos);
@@ -739,11 +844,10 @@ public class Lugosi implements LugosiConstants {
   Bool tipoBool = new Bool();
     tokenTipo = jj_consume_token(TIPO);
     token = jj_consume_token(ID);
-    tipo = tokenTipo.equals("int") ? tipoInt : tipoBool;
+    tipo = tokenTipo.toString().equals("int") ? tipoInt : tipoBool;
     argumentos.add(new Arg(tipo, new TokenId(token.toString())));
     label_5:
     while (true) {
-      ListaArg_(argumentos, tipoInt, tipoBool);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case VIRG:
         ;
@@ -752,6 +856,7 @@ public class Lugosi implements LugosiConstants {
         jj_la1[15] = jj_gen;
         break label_5;
       }
+      ListaArg_(argumentos, tipoInt, tipoBool);
     }
   }
 
@@ -761,7 +866,7 @@ public class Lugosi implements LugosiConstants {
     jj_consume_token(VIRG);
     tokenTipo = jj_consume_token(TIPO);
     token = jj_consume_token(ID);
-    tipo = tokenTipo.equals("int") ? tipoInt : tipoBool;
+    tipo = tokenTipo.toString().equals("int") ? tipoInt : tipoBool;
     argumentos.add(new Arg(tipo, new TokenId(token.toString())));
   }
 
