@@ -2,6 +2,37 @@ PARSER_BEGIN(Lugosi)
 import java.io.*;
 import java.util.ArrayList;
 
+class P {
+  private static int tabs = 0;
+  private static Boolean indent = true;
+
+  public static void tab() { 
+    tabs++; 
+  }
+
+  public static void untab() { 
+    if(tabs > 0)
+      tabs--; 
+  }
+
+  public static void print(String s) {
+    if(indent) {
+      for(int i = 0; i < tabs; ++i) {
+        System.out.print("    ");
+      }
+    }
+    System.out.print(s);
+
+    indent = false;
+  }
+
+  public static void println(String s) {
+    print(s + "\n");
+
+    indent = true;
+  }
+}
+
 class ArvoreLugosi {
   Main main;
   ArrayList<Func> funcs;  
@@ -9,6 +40,14 @@ class ArvoreLugosi {
   public ArvoreLugosi(Main main, ArrayList<Func> funcs) { 
     this.main = main; 
     this.funcs = funcs;
+  }
+
+  public void pprint() {
+    main.pprint();
+    for(Func func: funcs) {
+      P.println("");
+      func.pprint();
+    }
   }
 }
 
@@ -20,6 +59,22 @@ class Main {
     this.varDecls = varDecls; 
     this.comandos = comandos; 
   }
+
+  public void pprint() {
+    P.println("main {");
+      P.tab();
+      for(VarDecl varDecl: varDecls) {
+        Boolean first = varDecls.indexOf(varDecl) == 0, 
+          last = varDecls.indexOf(varDecl) == varDecls.size() - 1;
+        varDecl.pprint(first, last);
+      }
+
+      for(Comando comando: comandos) {
+        comando.pprint();
+      }
+      P.untab();
+    P.println("}");
+  }
 }
 
 class VarDecl {
@@ -30,15 +85,38 @@ class VarDecl {
     this.tipo = tipo;
     this.var = var;
   }
+
+  public void pprint(Boolean first, Boolean last) {
+    if(first)
+      P.print("var ");
+    else
+      P.print(", ");
+    tipo.pprint();
+    P.print(" " + var);
+    if(last)
+      P.println(";");
+}
 }
 
-abstract class Tipo {}
+abstract class Tipo {
+  public abstract void pprint();
+}
 
-class Int extends Tipo {}
+class Int extends Tipo {
+  public void pprint() {
+    P.print("int");
+  }
+}
 
-class Bool extends Tipo {}
+class Bool extends Tipo {
+  public void pprint() {
+    P.print("bool");
+  }
+}
 
-abstract class Comando {}
+abstract class Comando {
+  public abstract void pprint();
+}
 
 class Atribuicao extends Comando {
   String var;
@@ -48,6 +126,12 @@ class Atribuicao extends Comando {
     this.var = var;
     this.exp = exp;
   }
+
+  public void pprint() {
+    P.print(var + " := ");
+    exp.pprint();
+    P.println(";");
+}
 }
 
 class ChamadaFuncao extends Comando {
@@ -58,51 +142,100 @@ class ChamadaFuncao extends Comando {
     this.nomeFuncao = nomeFuncao;
     this.argumentos = argumentos;
   }
+
+  public void pprint() {
+    P.print(nomeFuncao + "(");
+    for(Exp arg : argumentos) {
+      if(!(argumentos.indexOf(arg) == 0))
+        P.print(", ");
+      arg.pprint();
+}
+    P.println(");");
+  }
 }
 
-class If extends Comando {
+class Condicional extends Comando {
   Exp cond;
   ArrayList<Comando> then;
 
+  public Condicional(Exp cond, ArrayList<Comando> then) {
+    this.cond = cond;
+    this.then = then;
+  }
+
+  public void pprint() {
+    if (this instanceof DoWhile)
+      P.println("do {");
+    else {
+      if (this instanceof If) 
+        P.print("if");
+      if (this instanceof While) 
+        P.print("while");
+      P.print("(");
+      cond.pprint();
+      P.println(") {");
+}
+      P.tab();
+      for(Comando comando: then) {
+        comando.pprint();
+}
+      P.untab();
+    if(this instanceof DoWhile) {
+      P.print("} while (");
+      cond.pprint();
+      P.println(");");
+    } 
+    else 
+      P.println("};");
+  }
+}
+
+class If extends Condicional {
   public If(Exp cond, ArrayList<Comando> then) {
-    this.cond = cond;
-    this.then = then;
+    super(cond, then);
   }
 }
 
-class While extends Comando {
-  Exp cond;
-  ArrayList<Comando> then;
-
+class While extends Condicional {
   public While(Exp cond, ArrayList<Comando> then) {
-    this.cond = cond;
-    this.then = then;
+    super(cond, then);
   }
 }
 
-class DoWhile extends Comando {
-  Exp cond;
-  ArrayList<Comando> then;
-
+class DoWhile extends Condicional {
   public DoWhile(Exp cond, ArrayList<Comando> then) {
-    this.cond = cond;
-    this.then = then;
+    super(cond, then);
   }
 }
 
-class Return extends Comando {
+class Chamada extends Comando {
   Exp exp;
 
+  public Chamada(Exp exp) {
+    this.exp = exp;
+  }
+
+  public void pprint() {
+    if(this instanceof Return)
+      P.print("return ");
+    else
+      P.print("print (");
+    exp.pprint();
+    if(this instanceof Print)
+      P.print(")");
+    P.println(";");
+}
+}
+
+class Return extends Chamada {
   public Return(Exp exp) {
-    this.exp = exp;
+    super(exp);
   }
 }
 
-class Print extends Comando {
-  Exp exp;
-
+class Print extends Chamada {
   public Print(Exp exp) {
-    this.exp = exp;
+    super(exp);
   }
 }
 
@@ -120,9 +253,30 @@ class Func {
     this.varDecls = varDecls;
     this.comandos = comandos;
   }
+
+  public void pprint() {
+    tipo.pprint();
+    P.print(" " + nome + "(");
+    for(Arg arg : argumentos) {
+      arg.pprint(argumentos.indexOf(arg) == 0);
+    }
+    P.println(") {");
+      P.tab();
+      for(VarDecl varDecl : varDecls) {
+        Boolean first = varDecls.indexOf(varDecl) == 0, last = varDecls.indexOf(varDecl) == varDecls.size() - 1;
+        varDecl.pprint(first, last);
+      }
+      for(Comando comando : comandos) {
+        comando.pprint();
+      }
+      P.untab();
+    P.println("}");
+  }
 }
 
-abstract class Exp {}
+abstract class Exp {
+  public abstract void pprint();
+}
 
 class OperadorInfixo extends Exp {
   Exp arg1, arg2;
@@ -132,6 +286,14 @@ class OperadorInfixo extends Exp {
     this.arg1 = arg1;
     this.arg2 = arg2;
     this.op = op;
+  }
+
+  public void pprint() {
+    P.print("(");
+    arg1.pprint();
+    P.print(" " + op + " ");
+    arg2.pprint();
+    P.print(")");
   }
 }
 
@@ -143,6 +305,10 @@ class TokenId extends Fator {
   public TokenId(String token) {
     this.token = token;
   }
+
+  public void pprint() {
+    P.print(token);
+  }
 }
 
 class FuncFator extends Fator {
@@ -153,6 +319,16 @@ class FuncFator extends Fator {
     this.func = func;
     this.argumentos = argumentos;
   }
+
+  public void pprint() {
+    P.print(func + "(");
+    for(Exp arg : argumentos) {
+      if(!(argumentos.indexOf(arg) == 0))
+        P.print(", ");
+      arg.pprint();
+    }
+    P.print(")");
+  }
 }
 
 class TokenNum extends Fator {
@@ -161,11 +337,23 @@ class TokenNum extends Fator {
   public TokenNum(String num) {
     this.num = num;
   }
+
+  public void pprint() {
+    P.print(num);
+  }
 }
 
-class True extends Fator {}
+class True extends Fator {
+  public void pprint() {
+    P.print("true");
+  }
+}
 
-class False extends Fator {}
+class False extends Fator {
+  public void pprint() {
+    P.print("false");
+  }
+} 
 
 class Arg {
   Tipo tipo;
@@ -175,6 +363,14 @@ class Arg {
     this.tipo = tipo;
     this.tokenId = tokenId;
   }
+
+  public void pprint(Boolean first) {
+    if(!first)
+      P.print(", ");
+    tipo.pprint();
+    P.print(" ");
+    tokenId.pprint();
+  }
 }
 
 public class Lugosi {
@@ -183,8 +379,8 @@ public class Lugosi {
     
     Lugosi parser = new Lugosi(new FileInputStream(args[0]));
     ArvoreLugosi arvore = parser.Lugosi();
+    arvore.pprint();
   }
-
 }
 
 PARSER_END(Lugosi)
@@ -242,7 +438,7 @@ Main Main ():
   comandos = SeqComandos()
   <FCHAVES>
   
-  { return new Main(null, null); }
+  { return new Main(varDecls, comandos); }
 }
 
 ArrayList<VarDecl> VarDecl() :
@@ -436,7 +632,7 @@ Fator Fator() :
     )?
   )
 
-  { return func == null ? new FuncFator(token.toString(), argumentos) : new TokenId(func); }
+  { return func == null ? new TokenId(token.toString()) : new FuncFator(token.toString(), argumentos); }
 | 
   { Token num; }
   num = <NUM>
@@ -449,7 +645,7 @@ Fator Fator() :
   }
   boolToken = <BOOL>
   
-  { return boolToken.toString().equals("True") ? new True() : new False(); }
+  { return boolToken.toString().equals("true") ? new True() : new False(); }
 }
 
 void ListaExp(ArrayList<Exp> exps) :
