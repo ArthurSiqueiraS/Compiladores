@@ -287,7 +287,7 @@ class Chamada extends Comando {
     if(this instanceof Return)
       P.print("return ");
     if(this instanceof Print)
-      P.print("print ");
+      P.print("puts ");
     exp.geraRuby();
     P.println("");
   }
