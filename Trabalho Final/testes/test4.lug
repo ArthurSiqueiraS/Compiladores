@@ -1,0 +1,39 @@
+main {
+  var int i;
+  var int num;
+  var bool cond;
+
+  i := 0;
+  do {
+    cond := isEven(i);
+    if(isEven(i)) {
+      num := fibonacci(i);
+      print(num);
+    };
+    i := (i + 1);
+  } while((i < 30));
+
+  endProgram();
+}
+
+function bool isEven(int num) {
+  while((num > 2)) do {
+    num := (num - 2);
+  };
+  return (num == 0);
+}
+
+function int fibonacci(int num) {
+  if((num == 0)) {
+    return 0;
+  };
+  if((num == 1)) {
+    return 1;
+  };
+
+  num := (fibonacci((num - 2)) + fibonacci((num - 1)));
+}
+
+function int endProgram() {
+  print(true);
+}

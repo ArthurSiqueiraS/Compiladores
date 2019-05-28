@@ -15,4 +15,4 @@ function int foo (int b, int a, int r) {
     return 1.35E-2;
 }
 
-function bool temp() {}
+function bool temp(bool cond) {}
